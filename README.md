@@ -1,34 +1,77 @@
-# Stellantis Email Archive & Search Tool
-
-An internal productivity tool built to solve a real problem at Stellantis India —
-searching and retrieving important project emails was slow and manual. This tool
-automates the entire process of backing up Outlook emails and makes them instantly
-searchable through a browser-based interface.
+# Company Email Archive & Search Tool
 
 ## The Problem
-Project-critical emails were buried in Outlook folders with no quick way to search
-or retrieve them across dates, senders, or keywords. Manual searching was
-time-consuming and error-prone.
+Large organizations enforce email retention policies that automatically purge
+emails after a fixed period — typically 90 days to 6 months. For engineers
+working on long-running projects that span 1 to 2 years, this creates a serious
+problem: critical project emails — technical decisions, design approvals, client
+instructions, issue resolutions — get permanently deleted before the project
+even closes.
+
+The only official workaround was to manually do a "Save As" for each important
+email in Outlook, one by one. This was:
+- Time-consuming and easy to forget
+- Inconsistent across team members
+- Impossible to search or retrieve quickly later
+
+There was no central, searchable record of past project communications.
 
 ## The Solution
-A lightweight local tool that:
-- Automatically backs up Outlook emails to structured local files using Python
-- Serves a clean browser-based search interface via a local HTTP server
-- Lets users filter and retrieve emails by keyword, sender, date, and more
-- Runs on a scheduled basis every weekday via Windows Task Scheduler
-- Works on both battery and AC power with no manual intervention needed
+A lightweight, fully local tool that automates the backup of Outlook emails
+and provides a clean browser-based interface to search and retrieve them —
+no cloud dependency, no IT involvement, no manual effort.
+
+Built entirely using Python, HTML, and Windows Batch Scripting, the tool runs
+silently in the background on a scheduled basis and keeps a structured,
+searchable archive of all important emails on the local machine.
+
+## Features
+- **Automated Backup** — Python script connects to Outlook and archives emails
+  to structured local files automatically, no manual "Save As" needed
+- **Browser-Based Search Interface** — Clean HTML viewer served via a local
+  HTTP server; search and filter emails by keyword, sender, subject, or date
+- **Scheduled Daily Runs** — Windows Task Scheduler integration runs the backup
+  every weekday at a user-defined time
+- **Battery & AC Support** — Scheduler configured to run regardless of whether
+  the machine is on battery or plugged in
+- **Fallback Port Handling** — Automatically switches to an alternate port if
+  the default is already in use
+- **Zero Cloud Dependency** — Everything stays local; no data leaves the machine
 
 ## How to Use
-1. Run `Stellantis_Email_Archive.bat` to launch the search viewer in your browser
-2. Run `SetBackupSchedule.bat` as Administrator to set up the daily auto-backup
-3. Enter your preferred backup time when prompted (e.g. 10:30 AM)
-4. The tool will back up and archive emails automatically every weekday
+
+### First-Time Setup
+1. Run `SetBackupSchedule.bat` as Administrator
+2. Enter your preferred daily backup time when prompted (e.g. `10:30 AM`)
+3. The tool registers itself as a Windows Scheduled Task and runs automatically
+   every weekday from that point on
+
+### Viewing Archived Emails
+1. Run `Company_Email_Archive.bat`
+2. The local server starts and the search interface opens in your default browser
+3. Search, filter, and browse your archived emails
+4. Close the window when done — the server shuts down automatically
 
 ## Files
-- `outlook_backup.py` — Core Python script that connects to Outlook and backs up emails
+- `outlook_backup.py` — Core Python script that connects to Outlook via COM
+  interface and exports emails to structured local files
 - `search.html` — Browser-based search and viewer interface
-- `Stellantis_Email_Archive.bat` — Launches the local server and opens the viewer
-- `SetBackupSchedule.bat` — Registers the backup as a scheduled Windows Task
+- `Company_Email_Archive.bat` — Launches the local HTTP server and opens
+  the viewer in the browser
+- `SetBackupSchedule.bat` — Registers the backup script as a recurring
+  Windows Scheduled Task with user-defined timing
 
-## Built With
-Python · HTML · Windows Batch Scripting · Windows Task Scheduler API
+## Tech Stack
+- **Python** — Outlook COM automation, file handling, local HTTP server
+- **HTML / JavaScript** — Search interface and email viewer
+- **Windows Batch Scripting** — Launcher and scheduler setup
+- **Windows Task Scheduler API** — Automated daily execution via PowerShell
+  and schtasks
+
+## Why This Matters
+On projects lasting over a year, having a reliable, searchable record of past
+emails is not just convenient — it is essential. Design decisions, scope changes,
+approvals, and technical clarifications are all communicated over email. Without
+an archive, teams lose institutional memory and spend hours trying to reconstruct
+context. This tool solves that problem quietly, automatically, and without
+requiring any changes to how the team works.
