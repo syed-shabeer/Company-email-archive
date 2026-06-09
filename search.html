@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Archive | Stellantis</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #003A8C;
+      --primary-hover: #002a6b;
+      --primary-light: #e6eef8;
+      --bg-page: #f0f4fa;
+      --bg-card: #ffffff;
+      --text-main: #0f172a;
+      --text-sub: #334155;
+      --text-muted: #94a3b8;
+      --border: #d0daea;
+      --inbox-blue: #0062cc;
+      --sent-green: #10b981;
+      --stellantis-gold: #C8A84B;
+      --sidebar-w: 400px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+    body {
+      background: var(--bg-page);
+      color: var(--text-main);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .topbar {
+      background: linear-gradient(90deg, #003A8C 0%, #001f5c 100%);
+      border-bottom: 3px solid var(--stellantis-gold);
+      padding: 0 1.5rem;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      z-index: 20;
+    }
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+      font-weight: 800; font-size: 1.1rem; color: white;
+      letter-spacing: -0.3px;
+    }
+    .logo-icon {
+      width: 34px; height: 34px; background: rgba(255,255,255,0.15);
+      border-radius: 9px; display: flex; align-items: center; justify-content: center;
+      font-size: 18px; border: 1px solid rgba(200,168,75,0.5);
+    }
+
+    .topbar-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .help-btn, .outlook-folder-btn {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 30px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      color: white;
+    }
+    .help-btn:hover, .outlook-folder-btn:hover {
+      background: var(--stellantis-gold);
+      border-color: var(--stellantis-gold);
+      color: #001f5c;
+      font-weight: 700;
+      transform: translateY(-1px);
+    }
+    .stats-pill {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px; font-weight: 600;
+      color: rgba(255,255,255,0.8);
+      transition: all 0.3s;
+    }
+    .stats-pill.ready { color: var(--stellantis-gold); background: rgba(200,168,75,0.2); border-color: rgba(200,168,75,0.5); }
+
+    .help-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(3px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      visibility: hidden;
+      opacity: 0;
+      transition: all 0.2s ease;
+    }
+    .help-overlay.active {
+      visibility: visible;
+      opacity: 1;
+    }
+    .help-card {
+      background: white;
+      max-width: 500px;
+      width: 90%;
+      border-radius: 28px;
+      box-shadow: 0 25px 40px rgba(0,0,0,0.2);
+      padding: 1.8rem 2rem 2rem;
+      border: 1px solid var(--border);
+    }
+    .help-card h3 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1.25rem;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .help-step {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 1.2rem;
+      border-left: 3px solid var(--stellantis-gold);
+      padding-left: 1rem;
+    }
+    .step-num {
+      background: var(--primary);
+      width: 26px;
+      height: 26px;
+      border-radius: 30px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 13px;
+      color: white;
+      flex-shrink: 0;
+    }
+    .step-text { font-size: 14px; line-height: 1.45; color: var(--text-sub); }
+    .step-text code {
+      background: #f1f5f9; border: 1px solid var(--border);
+      border-radius: 4px; padding: 1px 5px; font-size: 12px; font-family: monospace;
+    }
+    .close-help {
+      margin-top: 1.5rem;
+      background: var(--primary);
+      border: none;
+      padding: 10px 16px;
+      border-radius: 40px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      font-size: 13px;
+      color: white;
+    }
+    .close-help:hover { background: var(--primary-hover); }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1e293b;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      z-index: 1100;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+      pointer-events: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      max-width: 400px;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .load-bar-wrap { height: 3px; background: var(--border); flex-shrink: 0; overflow: hidden; }
+    .load-bar {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--primary), var(--stellantis-gold));
+      transition: width 0.3s ease;
+    }
+
+    .main-wrapper { display: flex; flex: 1; overflow: hidden; }
+    .sidebar {
+      width: var(--sidebar-w);
+      background: white;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .search-panel {
+      padding: 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: #fafbff;
+    }
+    .search-wrap { position: relative; }
+    .search-icon {
+      position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+      color: var(--text-muted);
+    }
+    #searchInput {
+      width: 100%;
+      padding: 9px 34px;
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: 9px;
+      font-size: 13.5px;
+      outline: none;
+    }
+    #searchInput:focus { border-color: var(--primary); }
+    #clearBtn {
+      position: absolute; right: 9px; top: 50%; transform: translateY(-50%);
+      background: #ef4444; color: white; border: none; border-radius: 50%;
+      width: 18px; height: 18px; font-size: 10px; cursor: pointer;
+      display: none; align-items: center; justify-content: center;
+      font-weight: 700; box-shadow: 0 1px 4px rgba(239,68,68,0.4);
+      transition: background 0.15s;
+    }
+    #clearBtn:hover { background: #b91c1c; }
+    #clearBtn.visible { display: flex; }
+    .filter-row { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .filter-row select, #senderFilter {
+      width: 100%; padding: 6px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 7px;
+      font-size: 12px;
+      background: white;
+    }
+    .results-bar {
+      padding: 7px 14px;
+      font-size: 11px; font-weight: 600;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: white;
+    }
+    .results-list { flex: 1; overflow-y: auto; }
+    .empty-state {
+      padding: 4rem 1.5rem; text-align: center; color: var(--text-muted);
+    }
+    .month-divider {
+      background: #f8fafc; padding: 5px 14px;
+      font-size: 10.5px; font-weight: 700; color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0;
+    }
+    .email-card {
+      padding: 11px 14px; border-bottom: 1px solid var(--border);
+      cursor: pointer; transition: background 0.12s;
+    }
+    .email-card:hover { background: #f8faff; }
+    .email-card.active {
+      background: var(--primary-light);
+      border-left: 3px solid var(--primary);
+      padding-left: 11px;
+    }
+    .card-header {
+      display: flex; justify-content: space-between;
+      margin-bottom: 3px; gap: 8px;
+    }
+    .card-from {
+      font-weight: 600; font-size: 12.5px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      flex: 1;
+    }
+    .card-date { font-size: 10.5px; color: var(--text-muted); flex-shrink: 0; }
+    .card-subject {
+      font-size: 12.5px; color: var(--text-sub);
+      margin-bottom: 5px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .card-snippet {
+      font-size: 11px; color: var(--text-muted);
+      margin-bottom: 5px;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .card-footer { display: flex; align-items: center; gap: 6px; }
+    .card-folder {
+      font-size: 9px; text-transform: uppercase; font-weight: 700;
+      padding: 2px 7px; border-radius: 4px;
+    }
+    .folder-inbox  { color: var(--inbox-blue); background: #e0f2fe; }
+    .folder-sent   { color: var(--sent-green); background: #dcfce7; }
+    .folder-custom { color: #7c3aed; background: #ede9fe; }
+
+    .viewer { flex: 1; background: var(--bg-page); padding: 2rem; overflow-y: auto; }
+    .viewer-placeholder {
+      height: 100%; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      color: var(--text-muted); text-align: center;
+    }
+    .email-full-view {
+      background: white; border-radius: 14px; border: 1px solid var(--border);
+      max-width: 860px; margin: 0 auto;
+    }
+    .view-header {
+      padding: 1.75rem 2rem; border-bottom: 1px solid var(--border);
+    }
+    .view-subject {
+      font-size: 1.3rem; font-weight: 800;
+      margin-bottom: 1.25rem;
+    }
+    .meta-chips { display: flex; flex-wrap: wrap; gap: 10px; }
+    .meta-chip {
+      background: var(--bg-page); border: 1px solid var(--border);
+      border-radius: 8px; padding: 6px 12px;
+    }
+    .meta-chip label {
+      font-size: 9.5px; font-weight: 700;
+      color: var(--text-muted); display: block;
+    }
+    .meta-chip span {
+      font-size: 12px; font-weight: 500; color: var(--text-main);
+    }
+    .view-body { padding: 1.75rem 2rem; font-size: 13.5px; line-height: 1.7; white-space: pre-wrap; }
+    mark { background: #fef08a; padding: 1px 3px; border-radius: 3px; }
+    .msg-action {
+      padding: 0.875rem 1.75rem; background: #fefce8;
+      border-top: 1px solid #fef08a;
+      display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+    }
+    .msg-action-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .file-id-text {
+      font-size: 11px; color: var(--text-sub); font-family: monospace;
+      word-break: break-all; line-height: 1.5;
+    }
+    .hint-note { font-size: 12px; color: var(--text-muted); }
+    .copy-btn {
+      background: var(--primary); color: white; border: none;
+      padding: 7px 14px; border-radius: 7px; cursor: pointer;
+      font-weight: 700;
+    }
+    .copy-btn.copied { background: var(--sent-green); }
+    .loading-spinner {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2.5px solid var(--border); border-top-color: var(--primary);
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    kbd {
+      background: #f1f5f9;
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="logo">
+    <div class="logo-icon">📫</div>
+    Stellantis Email Archive
+  </div>
+  <div class="topbar-actions">
+    <button id="outlookFolderBtn" class="outlook-folder-btn">📂 Outlook Items</button>
+    <button id="helpBtn" class="help-btn">❓ Help</button>
+    <div id="statsPill" class="stats-pill">Loading…</div>
+  </div>
+</nav>
+<div class="load-bar-wrap"><div class="load-bar" id="loadBar"></div></div>
+
+<div class="main-wrapper">
+  <aside class="sidebar">
+    <div class="search-panel">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Search subject, sender, body…" autocomplete="off" disabled>
+        <button id="clearBtn">✕</button>
+      </div>
+      <div class="filter-row">
+        <select id="folderFilter" disabled>
+          <option value="all">All Folders</option>
+        </select>
+        <select id="dateFilter" disabled>
+          <option value="all">Any Time</option>
+          <option value="7">Last 7 Days</option>
+          <option value="30">Last 30 Days</option>
+          <option value="365">Last Year</option>
+        </select>
+      </div>
+      <select id="senderFilter" disabled><option value="all">From Anyone</option></select>
+    </div>
+    <div class="results-bar">
+      <span id="resultsCount">Loading emails…</span>
+    </div>
+    <div class="results-list" id="resultsList">
+      <div class="empty-state">
+        <div class="icon">⏳</div>
+        <strong>Indexing email bodies…</strong>
+        <p>Search will be enabled shortly</p>
+      </div>
+    </div>
+  </aside>
+  <main class="viewer" id="mainViewer">
+    <div class="viewer-placeholder">
+      <div class="big-icon">📂</div>
+      <h2>Select an email to read</h2>
+      <p>Search or browse your archive on the left</p>
+    </div>
+  </main>
+</div>
+
+<div id="toast" class="toast"></div>
+<div id="helpModal" class="help-overlay">
+  <div class="help-card">
+    <h3>📘 How to use Email Archive</h3>
+    <div class="help-step"><div class="step-num">1</div><div class="step-text"><strong>Find your email</strong> — Use the search bar on the left. Type any keyword from the subject, sender, or body. Filter further by folder, date, or sender.</div></div>
+    <div class="help-step"><div class="step-num">2</div><div class="step-text"><strong>Click any email card</strong> to view its full content in the right panel.</div></div>
+    <div class="help-step"><div class="step-num">3</div><div class="step-text"><strong>Copy the filename</strong> — Scroll to the bottom of the email view and click <strong>"📋 Copy Filename"</strong> to copy the <code>.msg</code> filename.</div></div>
+    <div class="help-step"><div class="step-num">4</div><div class="step-text"><strong>Open the Emails folder</strong> — Click <strong>"📂 Outlook Items"</strong> in the top right. This opens the <strong>Emails</strong> folder (same location as this file) directly in File Explorer.</div></div>
+    <div class="help-step"><div class="step-num">5</div><div class="step-text"><strong>Search in File Explorer</strong> — Once the Emails folder is open, paste the copied filename into the File Explorer search box (top-right) and press <kbd>Enter</kbd> to locate and open the <code>.msg</code> file in Outlook.</div></div>
+    <button class="close-help" id="closeHelpBtn">Got it, close</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+let allEmails = [];
+const emailBodyCache = {};
+let bodiesReady = false;
+
+const SENDER_BLOCKLIST = ['hr', 'stellantis', 'iap', 'do_not_reply', 'facilitysea', 'gdpa', 'ict', 'identity', 'it support', 'india asia pacific', 'office365', 'microsoft', 'noreply', 'oneteam', 'plmpassport', 'password wizard', 'envoi', 'quality'];
+
+function showToast(message, duration = 4000) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), duration);
+}
+
+function resetViewerToPlaceholder() {
+  document.getElementById('mainViewer').innerHTML = `
+    <div class="viewer-placeholder">
+      <div class="big-icon">📂</div>
+      <h2>Select an email to read</h2>
+      <p>Search or browse your archive on the left</p>
+    </div>
+  `;
+}
+
+function getEmailsFolderPath() {
+  let basePath = window.location.pathname;
+  if (basePath.endsWith('search.html')) {
+    basePath = basePath.substring(0, basePath.lastIndexOf('/') + 1);
+  } else if (!basePath.endsWith('/')) {
+    basePath = basePath + '/';
+  }
+  let emailsPath = basePath + 'Emails/';
+  // Remove leading slash for Windows drive letters
+  if (emailsPath.startsWith('/') && emailsPath.match(/^\/[A-Za-z]:/)) {
+    emailsPath = emailsPath.substring(1);
+  }
+  // Decode URL-encoded characters (e.g., %20 to space)
+  try {
+    emailsPath = decodeURIComponent(emailsPath);
+  } catch(e) {}
+  return emailsPath;
+}
+
+// Outlook Items: try helper server first, fallback to copy path to clipboard
+function openEmailsFolder() {
+  fetch('http://localhost:9999/open-emails')
+    .then(r => {
+      if (!r.ok) throw new Error();
+    })
+    .catch(() => {
+      // Helper not running — copy the Emails folder path to clipboard as fallback
+      const path = getEmailsFolderPath();
+      navigator.clipboard.writeText(path).then(() => {
+        showToast('📋 Path copied! Paste into File Explorer address bar: ' + path, 5000);
+      }).catch(() => {
+        showToast('Emails folder path: ' + path, 6000);
+      });
+    });
+}
+
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('clearBtn').classList.remove('visible');
+  document.getElementById('folderFilter').value = 'all';
+  document.getElementById('dateFilter').value = 'all';
+  document.getElementById('senderFilter').value = 'all';
+  resetViewerToPlaceholder();
+  document.querySelectorAll('.email-card').forEach(c => c.classList.remove('active'));
+  search();
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadIndex();
+
+  const helpBtn = document.getElementById('helpBtn');
+  const helpModal = document.getElementById('helpModal');
+  const closeHelp = document.getElementById('closeHelpBtn');
+  helpBtn.addEventListener('click', () => helpModal.classList.add('active'));
+  closeHelp.addEventListener('click', () => helpModal.classList.remove('active'));
+  helpModal.addEventListener('click', (e) => { if(e.target === helpModal) helpModal.classList.remove('active'); });
+
+  // Outlook Items button opens the Emails folder
+  document.getElementById('outlookFolderBtn').addEventListener('click', openEmailsFolder);
+
+  const debouncedSearch = debounce(search, 180);
+  document.getElementById('searchInput').addEventListener('input', () => {
+    const val = document.getElementById('searchInput').value;
+    document.getElementById('clearBtn').classList.toggle('visible', val.length > 0);
+    debouncedSearch();
+  });
+  document.getElementById('clearBtn').addEventListener('click', clearSearch);
+  
+  ['folderFilter','dateFilter','senderFilter'].forEach(id =>
+    document.getElementById(id).addEventListener('change', () => {
+      resetViewerToPlaceholder();
+      document.querySelectorAll('.email-card').forEach(c => c.classList.remove('active'));
+      search();
+    })
+  );
+});
+
+async function loadIndex() {
+  try {
+    const response = await fetch('./email_index.json');
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    allEmails = (data.emails || []).sort((a, b) => new Date(b.received_date) - new Date(a.received_date));
+    setPill(`${allEmails.length} emails · indexing…`, false);
+    populateSenderDropdown(allEmails);
+    await prefetchAllBodies();
+    bodiesReady = true;
+    enableControls();
+    populateFolderDropdown(allEmails);
+    setPill(`${allEmails.length} emails`, true);
+    setLoadBar(100);
+    setTimeout(() => document.getElementById('loadBar').style.opacity = '0', 600);
+    search();
+  } catch (err) {
+    setPill('Error loading', false);
+    document.getElementById('resultsList').innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><strong>Could not load email_index.json</strong><p>Make sure the file exists in the same folder</p></div>`;
+    console.error(err);
+  }
+}
+
+async function prefetchAllBodies() {
+  const BATCH = 20;
+  const total = allEmails.length;
+  let done = 0;
+  for (let i = 0; i < total; i += BATCH) {
+    const batch = allEmails.slice(i, i + BATCH);
+    await Promise.all(batch.map(e => fetchEmailBody(e.email_id)));
+    done += batch.length;
+    setLoadBar(Math.round((done / total) * 92));
+    setPill(`Indexing ${done}/${total}…`, false);
+  }
+}
+
+function setLoadBar(pct) { document.getElementById('loadBar').style.width = pct + '%'; }
+function setPill(text, ready) {
+  const p = document.getElementById('statsPill');
+  p.textContent = text;
+  p.className = 'stats-pill' + (ready ? ' ready' : '');
+}
+function enableControls() {
+  ['searchInput','folderFilter','dateFilter','senderFilter'].forEach(id => document.getElementById(id).disabled = false);
+}
+
+function populateFolderDropdown(emails) {
+  const ff = document.getElementById('folderFilter');
+  // Clear all except "All Folders"
+  ff.innerHTML = '<option value="all">All Folders</option>';
+  const folders = [...new Set(emails.map(e => e.folder).filter(Boolean))].sort();
+  folders.forEach(folder => {
+    const opt = document.createElement('option');
+    opt.value = folder; opt.textContent = folder;
+    ff.appendChild(opt);
+  });
+}
+
+function populateSenderDropdown(emails) {
+  const sf = document.getElementById('senderFilter');
+  [...new Set(emails.map(e => e.from))].sort().forEach(sender => {
+    if (!SENDER_BLOCKLIST.some(t => sender.toLowerCase().includes(t))) {
+      const opt = document.createElement('option');
+      opt.value = sender; opt.textContent = sender;
+      sf.appendChild(opt);
+    }
+  });
+}
+
+async function fetchEmailBody(id) {
+  if (emailBodyCache[id] !== undefined) return emailBodyCache[id];
+  try {
+    const resp = await fetch(`./Emails/${id}.json`);
+    if (!resp.ok) throw new Error();
+    const data = await resp.json();
+    emailBodyCache[id] = data;
+    return data;
+  } catch {
+    emailBodyCache[id] = null;
+    return null;
+  }
+}
+
+function search() {
+  const query = document.getElementById('searchInput').value.toLowerCase().trim();
+  const fld = document.getElementById('folderFilter').value;
+  const dat = document.getElementById('dateFilter').value;
+  const snd = document.getElementById('senderFilter').value;
+  const now = Date.now();
+  
+  const pool = allEmails.filter(e => {
+    if (fld !== 'all' && e.folder !== fld) return false;
+    if (dat !== 'all') {
+      if ((now - new Date(e.received_date)) / 86400000 > parseInt(dat)) return false;
+    }
+    if (query) {
+      const cached = emailBodyCache[e.email_id];
+      const body = cached ? (cached.body || '').toLowerCase() : '';
+      if (!`${e.subject} ${e.from} ${body}`.includes(query)) return false;
+    }
+    return true;
+  });
+  
+  updateSenderDropdown(pool, snd);
+  const filtered = pool.filter(e => {
+    if (snd === 'all') return true;
+    if (e.folder === 'Sent Items') {
+      const body = (emailBodyCache[e.email_id]?.body || '').toLowerCase();
+      return e.subject.toLowerCase().includes(snd.toLowerCase()) || body.includes(snd.toLowerCase());
+    }
+    return e.from === snd;
+  });
+  displayResults(filtered, query);
+}
+
+function updateSenderDropdown(pool, currentSelection) {
+  const sf = document.getElementById('senderFilter');
+  const senders = [...new Set(pool.map(e => e.from))].filter(s => !SENDER_BLOCKLIST.some(t => s.toLowerCase().includes(t))).sort();
+  sf.innerHTML = '<option value="all">From Anyone</option>';
+  senders.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s; opt.textContent = s;
+    if (s === currentSelection) opt.selected = true;
+    sf.appendChild(opt);
+  });
+  if (currentSelection !== 'all' && !senders.includes(currentSelection)) sf.value = 'all';
+}
+
+function getFolderClass(folder) {
+  if (!folder) return 'folder-inbox';
+  if (folder === 'Inbox') return 'folder-inbox';
+  if (folder === 'Sent Items') return 'folder-sent';
+  return 'folder-custom';
+}
+
+function displayResults(emails, query = '') {
+  const list = document.getElementById('resultsList');
+  const bar = document.getElementById('resultsCount');
+  list.innerHTML = '';
+  
+  if (query) {
+    bar.innerHTML = `<span class="match-count">${emails.length}</span> result${emails.length !== 1 ? 's' : ''} for "<strong>${escapeHtml(query)}</strong>"`;
+  } else {
+    bar.textContent = `${emails.length} email${emails.length !== 1 ? 's' : ''}`;
+  }
+  
+  if (emails.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="icon">🔍</div><strong>No emails found</strong><p>Try a different keyword or filter</p></div>`;
+    return;
+  }
+  
+  const escapedQ = query ? query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : '';
+  const re = escapedQ ? new RegExp(`(${escapedQ})`, 'gi') : null;
+  let lastMonth = '';
+  
+  emails.forEach(e => {
+    const dateObj = new Date(e.received_date);
+    const monthKey = dateObj.toLocaleString('default', { month: 'long', year: 'numeric' });
+    if (monthKey !== lastMonth) {
+      lastMonth = monthKey;
+      const d = document.createElement('div');
+      d.className = 'month-divider';
+      d.textContent = monthKey;
+      list.appendChild(d);
+    }
+    
+    const isSent = e.folder === 'Sent Items';
+    const displayFrom = isSent ? '📤 Outgoing Thread' : escapeHtml(e.from);
+    
+    let snippetHtml = '';
+    if (re && query) {
+      const rawBody = emailBodyCache[e.email_id]?.body || '';
+      const idx = rawBody.toLowerCase().indexOf(query);
+      if (idx !== -1) {
+        const s = Math.max(0, idx - 40);
+        const end = Math.min(rawBody.length, idx + query.length + 90);
+        const raw = (s > 0 ? '…' : '') + rawBody.slice(s, end) + (end < rawBody.length ? '…' : '');
+        snippetHtml = `<div class="card-snippet">${escapeHtml(raw).replace(re, '<mark>$1</mark>')}</div>`;
+      }
+    }
+    
+    const subjectDisplay = re ? escapeHtml(e.subject).replace(re, '<mark>$1</mark>') : escapeHtml(e.subject);
+    const card = document.createElement('div');
+    card.className = 'email-card';
+    card.dataset.emailId = e.email_id;
+    card.onclick = () => viewEmail(e.email_id, card);
+    card.innerHTML = `
+      <div class="card-header">
+        <span class="card-from">${displayFrom}</span>
+        <span class="card-date">${dateObj.toLocaleDateString()}</span>
+      </div>
+      <div class="card-subject">${subjectDisplay}</div>
+      ${snippetHtml}
+      <div class="card-footer">
+        <span class="card-folder ${getFolderClass(e.folder)}">${escapeHtml(e.folder || 'Inbox')}</span>
+      </div>`;
+    list.appendChild(card);
+  });
+}
+
+async function viewEmail(id, cardEl) {
+  document.querySelectorAll('.email-card').forEach(c => c.classList.remove('active'));
+  if (cardEl) cardEl.classList.add('active');
+  
+  document.getElementById('mainViewer').innerHTML = `<div class="loading-spinner"><div class="spinner"></div><span>Loading email content...</span></div>`;
+  
+  const det = await fetchEmailBody(id);
+  if (!det) {
+    document.getElementById('mainViewer').innerHTML = `<div class="viewer-placeholder"><div class="big-icon">⚠️</div><h2>Email not found</h2><p>The .json file may be missing</p></div>`;
+    return;
+  }
+  
+  const query = document.getElementById('searchInput').value.trim();
+  let bodyHtml = escapeHtml(det.body || '(No body)');
+  let subjectHtml = escapeHtml(det.subject);
+  
+  if (query && query.length > 1) {
+    const re = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    bodyHtml = bodyHtml.replace(re, '<mark>$1</mark>');
+    subjectHtml = subjectHtml.replace(re, '<mark>$1</mark>');
+  }
+  
+  const msgFileName = `${id}.msg`;
+  document.getElementById('mainViewer').innerHTML = `
+    <div class="email-full-view">
+      <div class="view-header">
+        <h1 class="view-subject">${subjectHtml}</h1>
+        <div class="meta-chips">
+          <div class="meta-chip"><label>From</label><span>${escapeHtml(det.from)}</span></div>
+          <div class="meta-chip"><label>Date</label><span>${new Date(det.received_date).toLocaleString()}</span></div>
+          <div class="meta-chip"><label>Folder</label><span>${escapeHtml(det.folder)}</span></div>
+        </div>
+      </div>
+      <div class="view-body">${bodyHtml}</div>
+      <div class="msg-action">
+        <div class="msg-action-top">
+          <button class="copy-btn" id="copyBtn">📋 Copy Filename</button>
+          <span class="hint-note">💡 Copy this and open outlook items at top right & Search</span>
+        </div>
+        <span class="file-id-text">${escapeHtml(msgFileName)}</span>
+      </div>
+    </div>`;
+  
+  document.getElementById('copyBtn').addEventListener('click', () => copyFilename(msgFileName));
+}
+
+function copyFilename(filename) {
+  navigator.clipboard.writeText(filename).then(() => {
+    const btn = document.getElementById('copyBtn');
+    if (btn) {
+      btn.textContent = '✓ Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = '📋 Copy Filename';
+        btn.classList.remove('copied');
+      }, 2000);
+    }
+    showToast('Filename copied! Press Win+E, paste into address bar, Enter');
+  }).catch(() => showToast('Could not copy to clipboard'));
+}
+
+function escapeHtml(str) {
+  if (typeof str !== 'string') return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function debounce(fn, delay) {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
+}
+</script>
+</body>
+</html>
