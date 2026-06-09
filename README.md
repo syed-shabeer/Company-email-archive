@@ -73,5 +73,12 @@ On projects lasting over a year, having a reliable, searchable record of past
 emails is not just convenient — it is essential. Design decisions, scope changes,
 approvals, and technical clarifications are all communicated over email. Without
 an archive, teams lose institutional memory and spend hours trying to reconstruct
+
+## Live Demo
+UI Preview: https://syed-shabeer.github.io/Company-email-archive/search.html
+
+> Note: The live demo shows the search interface and email list only.
+> Full email preview requires the local Python backend to be running,
+> which processes emails from your own Outlook on your machine.
 context. This tool solves that problem quietly, automatically, and without
 requiring any changes to how the team works.
